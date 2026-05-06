@@ -4,7 +4,7 @@ metadata:
   name: backend-sa
   namespace: sample-app
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:ecr:us-east-1:624480629666:repository/sample-app/backend
+    eks.amazonaws.com/role-arn: arn:aws:iam::624480629666:role/sample-app-eks-cluster-role-hong
 ---
 apiVersion: v1
 kind: Secret
