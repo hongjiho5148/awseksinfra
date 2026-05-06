@@ -4,6 +4,7 @@ metadata:
   name: backend-sa
   namespace: sample-app
   annotations:
+    # 💡 주의: 이 부분은 ECR 주소가 아니라 생성하신 'IAM Role ARN'이 들어가야 정상 작동합니다.
     eks.amazonaws.com/role-arn: arn:aws:iam::624480629666:role/sample-app-eks-cluster-role-hong
 ---
 apiVersion: v1
@@ -28,11 +29,6 @@ spec:
   selector:
     matchLabels:
       app: backend
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -41,15 +37,33 @@ spec:
       serviceAccountName: backend-sa
       containers:
         - name: backend
-          image: 624480629666.dkr.ecr.ap-northeast-2.amazonaws.com/sample-app/backend:07a104266a9a71d7db6d24a323d30dae92cdfb8d
+          # 💡 배포 시 GitHub Actions가 이 줄의 :latest 부분을 실제 태그로 바꿔줄 것입니다.
+          image: 624480629666.dkr.ecr.ap-northeast-2.amazonaws.com/sample-app/backend:latest
           ports:
             - containerPort: 8080
           env:
+            # S3 설정
             - name: S3_BUCKET_NAME
               valueFrom:
                 secretKeyRef:
                   name: backend-secret
                   key: S3_BUCKET_NAME
+            # DB 설정 (Spring Boot 표준 환경변수명으로 매핑)
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_URL
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: DB_PASSWORD
           readinessProbe:
             httpGet:
               path: /health
